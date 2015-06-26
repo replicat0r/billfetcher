@@ -5,7 +5,7 @@ Rails.application.routes.draw do
 
   # You can have the root of your site routed with "root"
    root 'welcome#index'
-   get '/process', to: 'welcome#processbill'  
+   post '/process', to: 'welcome#processbill'
 
   # Example of regular route:
   #   get 'products/:id' => 'catalog#view'

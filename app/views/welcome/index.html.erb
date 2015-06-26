@@ -1,4 +1,31 @@
-<h1>Welcome#index</h1>
+<h1>Utility Portal</h1>
 <p>Find me in app/views/welcome/index.html.erb</p>
 
-<%= link_to("get bills", process_path) %>
+<!--<%= link_to("get bills", process_path) %>-->
+
+<h2>Login</h2>
+<div>
+	<%= form_tag("/process", method: "post") do %>
+	<div>
+    	<%= radio_button_tag(:company, "t_hydro") %>
+    	<%= label_tag(:company_thydro, "Toronto Hydro") %>
+	</div>
+    <div>
+    	<%= radio_button_tag(:company, "union_gas") %>
+    	<%= label_tag(:company_ugas, "Union Gas") %>
+    </div>
+</div>
+<table>
+	<tr>
+        <td><label>Username:</label></td>
+        <td><%= text_field_tag(:username) %></td>
+    </tr>
+  	<tr>
+  		<td><label>Password:</label></td>
+  		<td><%= password_field_tag(:password) %></td>
+  	</tr>
+</table>
+<%= submit_tag("submit") %>
+<% end %>
+
+
