@@ -38,10 +38,11 @@ class WelcomeController < ApplicationController
     form.submit(form.button_with(:type=>'submit'))
     puts mech.page.parser.css("title").text.strip
 
-    if page.code == 200
+    if page.code == '200'
       #obtain bills in .pdf format
       case company
       when "t_hydro"
+        #download PDFs
         mech.get('https://css.torontohydro.com/Pages/ViewBills.aspx')
         puts mech.page.parser.css("title").text.strip
         form = mech.page.form_with(:action=>/ViewBills.aspx/)
@@ -51,21 +52,54 @@ class WelcomeController < ApplicationController
           response = form.submit(form.button_with(:value=>'Download'))
           File.open("public/torontohydro_#{opt.value}.pdf", 'wb'){|f| f << response.body}
         end
+
+        #retrieve summary data and table
+        puts "Account Number: " + mech.page.parser.css('table.tbl_bill_summary tr:nth-child(4) span div span')[0].text
+        puts "Current Balance: " + mech.page.parser.css('table.tbl_bill_summary tr:first-child table span')[1].text
+        puts "Due Date: " + mech.page.parser.css('table.tbl_bill_summary tr:first-child table span')[3].text
+        counter = 0
+        csv_data = ""
+        mech.page.parser.css('table.tbl_acc_summary tr').each{|row|
+          counter = counter + 1;
+          if counter == 1
+            mech.page.parser.css("table.tbl_acc_summary tr:nth-child(#{counter}) th")[0..-2].each{|i| csv_data = csv_data + i.text.strip + ","}
+            csv_data = csv_data + mech.page.parser.css("table.tbl_acc_summary tr:nth-child(#{counter}) th")[-1].text.strip + "\n"
+          else
+            mech.page.parser.css("table.tbl_acc_summary tr:nth-child(#{counter}) td")[0..-2].each{|i| csv_data = csv_data + i.text.strip + ","}
+            csv_data = csv_data + mech.page.parser.css("table.tbl_acc_summary tr:nth-child(#{counter}) td")[-1].text.strip + "\n"
+          end
+        }
+        puts csv_data
+
       when "union_gas"
+        #Get account# and summary data
+        puts "Account Number: " + mech.page.parser.xpath('//*[@id="headerAccountSelector"]/option')[0].text.strip
+        puts "Current Balance: " + mech.page.parser.css("#body_content_currentAccountStatus_CurrentBalance_Data").text.strip
+        puts "Due Date: " + mech.page.parser.css("#body_content_mostRecentBillSummary_AppOrLatePaymentDate_Data").text.strip
+        
+        #Download PDFs
         mech.get('https://myaccount.uniongas.com/billHistory.aspx')
-        File.open('file.html', 'w'){|f| f.puts mech.page.parser.to_html}
-        bills = Nokogiri::HTML(open('file.html'))
-        bills.css('div.billHistoryLiteralContentCellColumn0LabelRegion a').each do |bill|
+        mech.page.parser.css('div.billHistoryLiteralContentCellColumn0LabelRegion a').each do |bill|
           puts "https://myaccount.uniongas.com/#{bill['href']}"
-          mech.pluggable_parser.pdf = Mechanize::DirectorySaver.save_to 'public'
-          mech.get("https://myaccount.uniongas.com/#{bill['href']}")
+          # mech.pluggable_parser.pdf = Mechanize::DirectorySaver.save_to 'public'
+          # mech.get("https://myaccount.uniongas.com/#{bill['href']}")
         end
+
+        #retrieve table
+        counter = 0
+        csv_data = ""
+        mech.page.parser.css('div.billHistoryLiteralContentCellColumn0LabelRegion a').each do |bill|
+          csv_data = csv_data + bill.text.strip + "," + mech.page.parser.css('div.billHistoryLiteralContentCellColumn8LabelRegion')[counter].text.strip + "\n"
+          counter = counter + 1
+        end
+        puts csv_data
+
       else
         redirect_to root_path
       end
-   else
-     puts 'Error logging in'
-   end
+    else
+      puts 'Error logging in'
+    end
     redirect_to root_path
 
   end
