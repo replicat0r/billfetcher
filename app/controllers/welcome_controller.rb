@@ -45,9 +45,6 @@ class WelcomeController < ApplicationController
         mech.get('https://css.torontohydro.com/Pages/ViewBills.aspx')
         puts mech.page.parser.css("title").text.strip
         form = mech.page.form_with(:action=>/ViewBills.aspx/)
-        form['ctl00$SPWebPartManager1$g_075c613b_6bec_42d8_9303_ee5f802d2cdd$ctl00$ddlStatements'] = login_cred['user']
-        form[login_field_names['pass']] = login_cred['pass']
-        form.submit(form.button_with(:value=>'Login'))
         field_name = 'ctl00$SPWebPartManager1$g_075c613b_6bec_42d8_9303_ee5f802d2cdd$ctl00$ddlStatements'
         form.field_with(:name=>field_name).options[0..-1].each do |opt|
           form[field_name] = opt.value
